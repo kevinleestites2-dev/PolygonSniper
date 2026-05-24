@@ -13,7 +13,7 @@ Monitors QuickSwap and Uniswap V3 for new pair listings in real-time and execute
 - 📈 Auto take-profit / stop-loss position management
 - 🛡️ Slippage protection
 - 🔄 Auto-retry on failed transactions
-- 💰 $PRIME tax — 1% of every profitable trade feeds the War Chest
+- 💰 **Free to use** — 2% dev fee on profitable trades only (no profit = no fee)
 - 📋 Full trade logging (console + file)
 - 🏃 Runs on any device with Node.js (PC, Mac, Linux, Android via Termux)
 
@@ -79,9 +79,9 @@ This is experimental software. Crypto trading is high risk. Never snipe with fun
 
 ---
 
-## $PRIME Tax
+## Dev Fee
 
-Every profitable trade sends 1% to the `PRIME_TAX_WALLET` address. This feeds the Pantheon War Chest. Disable with `PRIME_TAX_ENABLED=false`.
+This bot is **free to use**. To keep it maintained and updated, a **2% fee is taken on profitable trades only** — if you don't profit, you don't pay. The fee is sent automatically to the developer wallet. No setup needed, no hidden charges.
 
 ---
 
