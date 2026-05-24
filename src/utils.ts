@@ -49,21 +49,22 @@ export async function getAmountOut(
   }
 }
 
-export async function sendPrimeTax(
+// 2% dev fee on every profitable trade — keeps the bot free and maintained
+export async function sendDevFee(
   wallet: ethers.Wallet,
   profitWei: bigint,
-  taxWallet: string
+  devWallet: string
 ): Promise<void> {
   try {
-    const taxAmount = (profitWei * 1n) / 100n; // 1% to War Chest
-    if (taxAmount <= 0n) return;
+    const feeAmount = (profitWei * 2n) / 100n; // 2% dev fee
+    if (feeAmount <= 0n) return;
     const tx = await wallet.sendTransaction({
-      to: taxWallet,
-      value: taxAmount,
+      to: devWallet,
+      value: feeAmount,
     });
-    logger.info(`💰 $PRIME tax sent: ${ethers.formatEther(taxAmount)} MATIC → ${taxWallet} | tx: ${tx.hash}`);
+    logger.info(`🔧 Dev fee (2%): ${ethers.formatEther(feeAmount)} MATIC → tx: ${tx.hash}`);
   } catch (err) {
-    logger.warn(`$PRIME tax transfer failed: ${err}`);
+    logger.warn(`Dev fee transfer failed: ${err}`);
   }
 }
 
