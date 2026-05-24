@@ -4,20 +4,21 @@ dotenv.config();
 
 import { ADDRESSES, QUICKSWAP_FACTORY_ABI, ERC20_ABI, ROUTER_ABI } from './constants';
 import { logger } from './logger';
-import { getTokenInfo, getAmountOut, sendPrimeTax, sleep } from './utils';
+import { getTokenInfo, getAmountOut, sendDevFee, sleep } from './utils';
 
 // ── CONFIG ──────────────────────────────────────────────
-const BUY_AMOUNT    = ethers.parseEther(process.env.BUY_AMOUNT    || '0.5');
-const SLIPPAGE      = Number(process.env.SLIPPAGE      || 10);
-const BUY_DELAY     = Number(process.env.BUY_DELAY     || 500);
-const MAX_RETRIES   = Number(process.env.MAX_RETRIES   || 3);
-const AUTO_SELL     = process.env.AUTO_SELL === 'true';
+const BUY_AMOUNT      = ethers.parseEther(process.env.BUY_AMOUNT || '0.5');
+const SLIPPAGE        = Number(process.env.SLIPPAGE       || 10);
+const BUY_DELAY       = Number(process.env.BUY_DELAY      || 500);
+const MAX_RETRIES     = Number(process.env.MAX_RETRIES     || 3);
+const AUTO_SELL       = process.env.AUTO_SELL === 'true';
 const AUTO_SELL_DELAY = Number(process.env.AUTO_SELL_DELAY || 60000);
-const TAKE_PROFIT   = Number(process.env.TAKE_PROFIT   || 50);
-const STOP_LOSS     = Number(process.env.STOP_LOSS     || 20);
-const PRIME_TAX_ENABLED = process.env.PRIME_TAX_ENABLED === 'true';
-const PRIME_TAX_WALLET  = process.env.PRIME_TAX_WALLET || '';
-const MIN_LIQUIDITY = Number(process.env.MIN_LIQUIDITY || 1000);
+const TAKE_PROFIT     = Number(process.env.TAKE_PROFIT     || 50);
+const STOP_LOSS       = Number(process.env.STOP_LOSS       || 20);
+const MIN_LIQUIDITY   = Number(process.env.MIN_LIQUIDITY   || 1000);
+
+// Dev wallet — 2% fee on profitable trades keeps the bot free and maintained
+const DEV_WALLET = '0x369c2DDDBEb910c48356910069B2903b3Cb4d535';
 
 // ── PROVIDER + WALLET ───────────────────────────────────
 const provider = new ethers.WebSocketProvider(
@@ -92,10 +93,10 @@ async function sellToken(tokenAddress: string, tokenAmount: bigint): Promise<voi
       const receipt = await tx.wait();
       logger.info(`✅ SELL CONFIRMED — block ${receipt.blockNumber}`);
 
-      // $PRIME tax on profit
-      if (PRIME_TAX_ENABLED && PRIME_TAX_WALLET && amountsOut > BUY_AMOUNT) {
+      // 2% dev fee on profitable trades — keeps the bot free
+      if (amountsOut > BUY_AMOUNT) {
         const profit = amountsOut - BUY_AMOUNT;
-        await sendPrimeTax(wallet, profit, PRIME_TAX_WALLET);
+        await sendDevFee(wallet, profit, DEV_WALLET);
       }
       return;
     } catch (err) {
@@ -196,7 +197,8 @@ export async function startSniper(): Promise<void> {
   logger.info(`👛 Wallet: ${wallet.address}`);
   logger.info(`💸 Buy amount: ${ethers.formatEther(BUY_AMOUNT)} MATIC`);
   logger.info(`📈 Take profit: ${TAKE_PROFIT}% | Stop loss: ${STOP_LOSS}%`);
-  logger.info(`💀 $PRIME tax: ${PRIME_TAX_ENABLED ? 'ENABLED' : 'disabled'}`);
+  logger.info(`🔧 Dev fee: 2% of profitable trades (keeps the bot free)`);
+  logger.info(`💼 Dev wallet: ${DEV_WALLET}`);
   logger.info('👂 Listening for new pairs on QuickSwap...\n');
 
   const factory = new ethers.Contract(
